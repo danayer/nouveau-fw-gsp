@@ -1,56 +1,31 @@
 Name:           nouveau-fw-gsp
 Version:        565.57.01
 Release:        1%{?dist}
-Summary:        NVIDIA GSP (Turing+) firmware for the latest GSP kernel code
+Summary:        Nouveau GSP firmware
 
-License:        MIT and LicenseRef-NVIDIA
-URL:            https://download.nvidia.com/XFree86/Linux-x86_64/%{version}/README/gsp.html
-Source0:        https://download.nvidia.com/XFree86/Linux-x86_64/%{version}/NVIDIA-Linux-x86_64-%{version}.run
-Source1:        https://github.com/NVIDIA/open-gpu-kernel-modules/archive/refs/tags/%{version}.tar.gz
+License:        MIT
+URL:            https://www.nvidia.com
+Source0:        https://download.nvidia.com/XFree86/Linux-x86_64/565.57.01/NVIDIA-Linux-x86_64-565.57.01.run
 
 BuildArch:      noarch
-BuildRequires:  python3
-BuildRequires:  bash
-BuildRequires:  coreutils
-BuildRequires:  tar
-Requires:       kernel-firmware
 
 %description
-This package contains the NVIDIA GSP firmware blobs (Turing and newer),
-necessary for the latest kernel with GSP support to function.
+Nouveau firmware for GSP support.
 
 %prep
-# Включение отладочных сообщений
 set -x
-
-# Извлекаем исходники ядра NVIDIA
-%setup -q -n open-gpu-kernel-modules-%{version} -a1
-
-# Создаём временную директорию для извлечения содержимого .run файла
 mkdir -p nvidia_extracted
-sh %{SOURCE0} --extract-only --target nvidia_extracted || exit 1
-
-# Отладка: проверяем содержимое извлечённой директории
-ls -la nvidia_extracted || exit 1
+sh %{SOURCE0} --extract-only --target ./nvidia_extracted
 
 %build
-# Извлечение прошивок с использованием скрипта NVIDIA
-python3 nouveau/extract-firmware-nouveau.py -s -d nvidia_extracted || exit 1
+# Если нужно добавить шаги сборки
 
 %install
-# Устанавливаем прошивки
-install -d %{buildroot}/usr/lib/firmware
-cp -a _out/nvidia/* %{buildroot}/usr/lib/firmware/ || exit 1
-
-# Устанавливаем лицензии
-install -d %{buildroot}/usr/share/licenses/%{name}
-install -m 644 COPYING %{buildroot}/usr/share/licenses/%{name}/LICENSE.expat
-install -m 644 nvidia_extracted/LICENSE %{buildroot}/usr/share/licenses/%{name}/LICENSE.nvidia
+mkdir -p %{buildroot}/usr/lib/firmware/nouveau
+cp -a ./nvidia_extracted/* %{buildroot}/usr/lib/firmware/nouveau
 
 %files
-%license /usr/share/licenses/%{name}/LICENSE.expat
-%license /usr/share/licenses/%{name}/LICENSE.nvidia
-/usr/lib/firmware/*
+/usr/lib/firmware/nouveau
 
 %changelog
 * Fri Jan 17 2025 Danayer <Danayerofficial@yandex.ru> - 565.57.01-1
