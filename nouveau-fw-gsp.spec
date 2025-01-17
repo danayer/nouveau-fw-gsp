@@ -32,10 +32,13 @@ cp -a %{gsp_output} %{buildroot}%{_prefix}/lib/firmware/
 
 # Create temp dir for NVIDIA driver extraction
 TMPDIR=$(mktemp -d)
-sh %{SOURCE1} -x -o "$TMPDIR"
+cd "$TMPDIR"
+sh %{SOURCE1} -x
+cd NVIDIA-Linux-x86_64-%{version}
 
-# Install licenses
-install -Dm644 COPYING %{buildroot}%{_datadir}/licenses/%{name}/LICENSE.expat
+# Install licenses 
+cd -
+install -Dm644 %{_builddir}/open-gpu-kernel-modules-%{version}/COPYING %{buildroot}%{_datadir}/licenses/%{name}/LICENSE.expat
 install -Dm644 "$TMPDIR"/NVIDIA-Linux-x86_64-%{version}/LICENSE %{buildroot}%{_datadir}/licenses/%{name}/LICENSE.nvidia
 
 rm -rf "$TMPDIR"
