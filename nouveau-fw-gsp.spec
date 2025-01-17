@@ -10,6 +10,9 @@ Source1:        https://github.com/NVIDIA/open-gpu-kernel-modules/archive/refs/t
 
 BuildArch:      noarch
 BuildRequires:  python3
+BuildRequires:  bash
+BuildRequires:  coreutils
+BuildRequires:  tar
 Requires:       kernel-firmware
 
 %description
@@ -17,21 +20,27 @@ This package contains the NVIDIA GSP firmware blobs (Turing and newer),
 necessary for the latest kernel with GSP support to function.
 
 %prep
-# Распаковываем исходники ядра NVIDIA
+# Включение отладочных сообщений
+set -x
+
+# Извлекаем исходники ядра NVIDIA
 %setup -q -n open-gpu-kernel-modules-%{version} -a1
 
-# Извлекаем содержимое .run файла NVIDIA
+# Создаём временную директорию для извлечения содержимого .run файла
 mkdir -p nvidia_extracted
-sh %{SOURCE0} --extract-only --target nvidia_extracted
+sh %{SOURCE0} --extract-only --target nvidia_extracted || exit 1
+
+# Отладка: проверяем содержимое извлечённой директории
+ls -la nvidia_extracted || exit 1
 
 %build
 # Извлечение прошивок с использованием скрипта NVIDIA
-python3 nouveau/extract-firmware-nouveau.py -s -d nvidia_extracted
+python3 nouveau/extract-firmware-nouveau.py -s -d nvidia_extracted || exit 1
 
 %install
 # Устанавливаем прошивки
 install -d %{buildroot}/usr/lib/firmware
-cp -a _out/nvidia/* %{buildroot}/usr/lib/firmware/
+cp -a _out/nvidia/* %{buildroot}/usr/lib/firmware/ || exit 1
 
 # Устанавливаем лицензии
 install -d %{buildroot}/usr/share/licenses/%{name}
