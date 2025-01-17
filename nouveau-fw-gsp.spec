@@ -17,7 +17,7 @@ This package contains the NVIDIA GSP firmware blobs (Turing and newer),
 necessary for the latest kernel with GSP support to function.
 
 %prep
-# Извлекаем исходники ядра NVIDIA
+# Распаковываем исходники ядра NVIDIA
 %setup -q -n open-gpu-kernel-modules-%{version} -a1
 
 # Извлекаем содержимое .run файла NVIDIA
