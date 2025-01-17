@@ -1,32 +1,49 @@
+%global nvidia_ver 565.57.01
+%global gsp_output _out/nvidia
+
 Name:           nouveau-fw-gsp
-Version:        565.57.01
+Version:        %{nvidia_ver}
 Release:        1%{?dist}
-Summary:        Nouveau GSP firmware
+Summary:        NVIDIA GSP (Turing+) firmware for the latest GSP kernel code
 
-License:        MIT
-URL:            https://www.nvidia.com
-Source0:        https://download.nvidia.com/XFree86/Linux-x86_64/565.57.01/NVIDIA-Linux-x86_64-565.57.01.run
+License:        MIT AND NVIDIA
+URL:            https://download.nvidia.com/XFree86/Linux-x86_64/%{version}/README/gsp.html
+Source0:        https://github.com/NVIDIA/open-gpu-kernel-modules/archive/refs/tags/%{version}.tar.gz
+Source1:        https://download.nvidia.com/XFree86/Linux-x86_64/%{version}/NVIDIA-Linux-x86_64-%{version}.run
 
+BuildRequires:  git-core
+BuildRequires:  python3
 BuildArch:      noarch
 
 %description
-Nouveau firmware for GSP support.
+NVIDIA GSP firmware blobs required for Nouveau driver support on Turing and newer GPUs.
 
 %prep
-set -x
-mkdir -p nvidia_extracted
-sh %{SOURCE0} --extract-only --target ./nvidia_extracted
+%autosetup -n open-gpu-kernel-modules-%{version}
 
 %build
-# Если нужно добавить шаги сборки
+rm -rf %{gsp_output} || true
+./nouveau/extract-firmware-nouveau.py -s -d %{SOURCE1}
 
 %install
-mkdir -p %{buildroot}/usr/lib/firmware/nouveau
-cp -a ./nvidia_extracted/* %{buildroot}/usr/lib/firmware/nouveau
+# Install firmware
+install -dm755 %{buildroot}%{_prefix}/lib/firmware
+cp -a %{gsp_output} %{buildroot}%{_prefix}/lib/firmware/
+
+# Create temp dir for NVIDIA driver extraction
+TMPDIR=$(mktemp -d)
+sh %{SOURCE1} -x -o "$TMPDIR"
+
+# Install licenses
+install -Dm644 COPYING %{buildroot}%{_datadir}/licenses/%{name}/LICENSE.expat
+install -Dm644 "$TMPDIR"/NVIDIA-Linux-x86_64-%{version}/LICENSE %{buildroot}%{_datadir}/licenses/%{name}/LICENSE.nvidia
+
+rm -rf "$TMPDIR"
 
 %files
-/usr/lib/firmware/nouveau
+%license %{_datadir}/licenses/%{name}/LICENSE.*
+%{_prefix}/lib/firmware/nvidia/
 
 %changelog
-* Fri Jan 17 2025 Danayer <Danayerofficial@yandex.ru> - 565.57.01-1
-- Initial release for Fedora Copr
+* Wed Feb 14 2024 Initial Release <aidas957@gmail.com> - 565.57.01-1
+- Initial package
