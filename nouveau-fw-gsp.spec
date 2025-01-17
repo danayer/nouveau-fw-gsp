@@ -18,19 +18,19 @@ This package provides NVIDIA GSP (Graphics System Processor) firmware for GPUs b
 %prep
 %autosetup -n open-gpu-kernel-modules-%{version} -a1
 
+# Extract the NVIDIA run file
+mkdir -p %{_builddir}/nvidia
+sh %{SOURCE0} --extract-only --target %{_builddir}/nvidia
+
 %build
 # Compile the GSP blobs
 rm -rf %{_gsp_output} || true
-./nouveau/extract-firmware-nouveau.py -s -d ../%{_nvidia}.run
+./nouveau/extract-firmware-nouveau.py -s -d %{_builddir}/nvidia
 
 %install
 # Create necessary directories and copy blobs
 install -dm755 %{buildroot}/usr/lib/firmware
 cp -a %{_gsp_output} %{buildroot}/usr/lib/firmware
-
-# Extract NVIDIA-provided files
-mkdir -p %{_builddir}/nvidia
-sh %{_sourcedir}/%{_nvidia}.run -x -d %{_builddir}/nvidia
 
 # Install licenses
 install -Dm644 COPYING %{buildroot}/usr/share/licenses/%{name}/LICENSE.expat
